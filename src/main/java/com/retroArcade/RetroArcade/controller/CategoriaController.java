@@ -6,6 +6,7 @@ import java.util.List;
 import com.retroArcade.RetroArcade.model.Categoria;
 import com.retroArcade.RetroArcade.repository.CategoriaRepository;
 
+
 @RestController
 @RequestMapping("/api/categoria")
 @CrossOrigin(origins = "*")

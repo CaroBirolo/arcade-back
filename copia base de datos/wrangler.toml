@@ -1,0 +1,7 @@
+name = "retroverse"
+compatibility_date = "2024-10-31"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "retroverse-bd"
+database_id = "dd61b97c-1426-4007-8841-ef2ed14ca84a"
