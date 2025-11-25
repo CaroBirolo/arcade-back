@@ -196,3 +196,51 @@ export const JuegoBySlug = async (c: Context) => {
     );
   }
 };
+
+export const JuegosByCategoriaSlug = async (c: Context) => {
+  try {
+    const slug = c.req.param("slug");
+
+    const page = Number(c.req.query("page") || 0);
+    const size = Number(c.req.query("size") || 40);
+    const offset = page * size;
+
+    const categoria = await c.env.DB
+      .prepare("SELECT id, nombre, slug FROM categorias WHERE slug = ? LIMIT 1")
+      .bind(slug)
+      .first();
+
+    if (!categoria) {
+      return c.json({ error: "Categoría no encontrada" }, 404);
+    }
+
+    const totalResult = await c.env.DB
+      .prepare("SELECT COUNT(*) AS total FROM juegos WHERE categoria_id = ?")
+      .bind(categoria.id)
+      .first<{ total: number }>();
+
+    const total = totalResult?.total || 0;
+
+    const juegos = await c.env.DB
+      .prepare(
+        "SELECT * FROM juegos WHERE categoria_id = ? LIMIT ? OFFSET ?"
+      )
+      .bind(categoria.id, size, offset)
+      .all();
+
+    return c.json({
+      categoria,
+      page,
+      size,
+      total,
+      totalPages: Math.ceil(total / size),
+      juegos: juegos.results || [],
+    });
+  } catch (err) {
+    return c.json(
+      { error: "Error interno", detalle: (err as Error).message },
+      500
+    );
+  }
+};
+
