@@ -1,7 +1,7 @@
 import { fromHono } from "chanfana";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { JuegosList, JuegoById, JuegosByCategoria, BuscarJuegos, JuegosRandom, JuegosByCategoriaYLetra, JuegoBySlug, JuegosByCategoriaSlug } from "./endpoints/juegos";
+import { JuegosList, JuegoById, JuegosByCategoria, BuscarJuegos, JuegosRandom, JuegosByCategoriaSlugYLetra, JuegoBySlug, JuegosByCategoriaSlug } from "./endpoints/juegos";
 import { CategoriasList, CategoriaBySlug } from "./endpoints/categorias";
 
 
@@ -33,7 +33,9 @@ openapi.get("/api/juegos/categoria/slug/:slug", JuegosByCategoriaSlug);
 
 openapi.get("/api/juegos/buscar", BuscarJuegos);
 openapi.get("/api/juegos/random/:size", JuegosRandom);
-openapi.get("/api/juegos/categoria/id/:id/letra/:letra", JuegosByCategoriaYLetra);
+
+//openapi.get("/api/juegos/categoria/id/:id/letra/:letra", JuegosByCategoriaYLetra);
+openapi.get("/api/juegos/categoria/slug/:slug/letra/:letra", JuegosByCategoriaSlugYLetra);
 
 
 export default app;

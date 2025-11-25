@@ -105,75 +105,89 @@ export const JuegosRandom = async (c: Context) => {
 
 // Juegos por nombre de categoría
 
-export const JuegosByCategoriaYLetra = async (c: Context) => {
+export const JuegosByCategoriaSlugYLetra = async (c: Context) => {
   try {
-    const categoriaId = c.req.param("id");
+    const slug = c.req.param("slug");
     const letra = c.req.param("letra");
 
-    const url = new URL(c.req.url);
-    const page = parseInt(url.searchParams.get("page") || "0");
-    const size = parseInt(url.searchParams.get("size") || "40");
+    const page = Number(c.req.query("page") || 0);
+    const size = Number(c.req.query("size") || 40);
     const offset = page * size;
 
     if (!letra) {
-      return c.json({ error: "Debe especificar una letra o #" }, 400);
+      return c.json({ error: "Debe especificar una letra (A-Z) o # para números" }, 400);
     }
 
-    // Condición para letras o números
+    // 🔹 Buscar categoría por slug
+    const categoria = await c.env.DB
+      .prepare("SELECT id, nombre, slug FROM categorias WHERE slug = ? LIMIT 1")
+      .bind(slug)
+      .first();
+
+    if (!categoria) {
+      return c.json({ error: "Categoría no encontrada" }, 404);
+    }
+
+    // 🔹 Armar filtro por letra
     let filtroNombre = "";
+    let bindValues: any[] = [];
+
     if (letra === "#") {
       filtroNombre = "j.nombre GLOB '[0-9]*'";
+      bindValues = [categoria.id, size, offset];
     } else {
       filtroNombre = "LOWER(j.nombre) LIKE ?";
+      bindValues = [categoria.id, letra.toLowerCase() + "%", size, offset];
     }
 
-    // Consulta principal
+    // 🔹 Consulta principal
     const query = `
       SELECT j.*
       FROM juegos j
-      JOIN categorias c ON j.categoria_id = c.id
-      WHERE c.id = ?
+      WHERE j.categoria_id = ?
       AND ${filtroNombre}
       LIMIT ? OFFSET ?
     `;
 
-    const bindValues = letra === "#"
-      ? [categoriaId, size, offset]
-      : [categoriaId, `${letra.toLowerCase()}%`, size, offset];
-
     const results = await c.env.DB.prepare(query).bind(...bindValues).all();
 
-    // Contar total para totalPages
+    // 🔹 Contar el total de elementos
+    let countValues: any[] = [];
+
+    if (letra === "#") {
+      countValues = [categoria.id];
+    } else {
+      countValues = [categoria.id, letra.toLowerCase() + "%"];
+    }
+
     const countQuery = `
       SELECT COUNT(*) AS total
       FROM juegos j
-      JOIN categorias c ON j.categoria_id = c.id
-      WHERE c.id = ?
+      WHERE j.categoria_id = ?
       AND ${filtroNombre}
     `;
 
-    const countValues = letra === "#"
-      ? [categoriaId]
-      : [categoriaId, `${letra.toLowerCase()}%`];
-
     const totalRes = await c.env.DB.prepare(countQuery).bind(...countValues).first();
     const total = totalRes?.total || 0;
-    const totalPages = Math.ceil(total / size);
 
     return c.json({
+      categoria,
+      letra,
       page,
       size,
       total,
-      totalPages,
-      content: results.results,
+      totalPages: Math.ceil(total / size),
+      content: results.results || [],
     });
+
   } catch (err) {
     return c.json(
-      { error: "Error al obtener juegos por letra", detalle: (err as any).message },
+      { error: "Error al obtener juegos por categoría y letra", detalle: (err as any).message },
       500
     );
   }
 };
+
 
 // ==========================
 // OBTENER JUEGO POR SLUG
