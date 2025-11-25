@@ -1,8 +1,9 @@
 import { fromHono } from "chanfana";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { CategoriasList } from "./endpoints/categorias";
-import { JuegosList, JuegoById, JuegosByCategoria, BuscarJuegos, JuegosRandom, JuegosByCategoriaYLetra } from "./endpoints/juegos";
+import { JuegosList, JuegoById, JuegosByCategoria, BuscarJuegos, JuegosRandom, JuegosByCategoriaYLetra, JuegoBySlug } from "./endpoints/juegos";
+import { CategoriasList, CategoriaBySlug } from "./endpoints/categorias";
+
 
 
 // Start a Hono app
@@ -23,7 +24,8 @@ const openapi = fromHono(app, {
 // Register OpenAPI endpoints
 openapi.get("/api/categorias", CategoriasList);
 openapi.get("/api/juegos", JuegosList);
-
+openapi.get("/api/juegos/slug/:slug", JuegoBySlug);
+openapi.get("/api/categorias/slug/:slug", CategoriaBySlug);
 openapi.get("/api/juegos/id/:id", JuegoById);
 openapi.get("/api/juegos/categoria/:categoriaId", JuegosByCategoria);
 openapi.get("/api/juegos/buscar", BuscarJuegos);

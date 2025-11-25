@@ -44,7 +44,8 @@ export const JuegosByCategoria = async (c: Context) => {
     const totalQuery = await c.env.DB
       .prepare("SELECT COUNT(*) AS total FROM juegos WHERE categoria_id = ?")
       .bind(categoriaId)
-      .first<{ total: number }>();
+      .first();
+
 
     const total = totalQuery?.total || 0;
     const totalPages = Math.ceil(total / size);
@@ -63,10 +64,9 @@ export const JuegosByCategoria = async (c: Context) => {
       content: results.results,
     });
   } catch (err) {
-    return c.json({ error: 'Error interno', detalle: (err as Error).message }, 500);
+    return c.json({ error: 'Error interno', detalle: (err as any).message }, 500);
   }
 };
-
 
 // Buscar juegos por nombre (contiene)
 export const BuscarJuegos = async (c: Context) => {
@@ -99,30 +99,11 @@ export const JuegosRandom = async (c: Context) => {
 
     return c.json(results.results);
   } catch (err) {
-    return c.json({ error: "Error al obtener juegos aleatorios", detalle: err.message }, 500);
+    return c.json({ error: "Error al obtener juegos aleatorios", detalle: err as any }, 500);
   }
 };
 
 // Juegos por nombre de categoría
-export const JuegosByCategoriaNombre = async (c: Context) => {
-  const nombre = c.req.param('nombre');
-  const url = new URL(c.req.url);
-  const page = parseInt(url.searchParams.get('page') || '0');
-  const size = parseInt(url.searchParams.get('size') || '40');
-  const offset = page * size;
-
-  const results = await c.env.DB
-    .prepare(`
-      SELECT j.* FROM juegos j
-      JOIN categorias c ON j.categoria_id = c.id
-      WHERE LOWER(c.nombre) = LOWER(?)
-      LIMIT ? OFFSET ?
-    `)
-    .bind(nombre, size, offset)
-    .all();
-
-  return c.json({ page, size, content: results.results });
-};
 
 export const JuegosByCategoriaYLetra = async (c: Context) => {
   try {
@@ -151,7 +132,7 @@ export const JuegosByCategoriaYLetra = async (c: Context) => {
       SELECT j.*
       FROM juegos j
       JOIN categorias c ON j.categoria_id = c.id
-      WHERE c.id = LOWER(?)
+      WHERE c.id = ?
       AND ${filtroNombre}
       LIMIT ? OFFSET ?
     `;
@@ -167,7 +148,7 @@ export const JuegosByCategoriaYLetra = async (c: Context) => {
       SELECT COUNT(*) AS total
       FROM juegos j
       JOIN categorias c ON j.categoria_id = c.id
-      WHERE LOWER(c.nombre) = LOWER(?)
+      WHERE c.id = ?
       AND ${filtroNombre}
     `;
 
@@ -188,7 +169,29 @@ export const JuegosByCategoriaYLetra = async (c: Context) => {
     });
   } catch (err) {
     return c.json(
-      { error: "Error al obtener juegos por letra", detalle: err.message },
+      { error: "Error al obtener juegos por letra", detalle: (err as any).message },
+      500
+    );
+  }
+};
+
+// ==========================
+// OBTENER JUEGO POR SLUG
+// ==========================
+export const JuegoBySlug = async (c: Context) => {
+  try {
+    const slug = c.req.param("slug");
+    const result = await c.env.DB
+      .prepare("SELECT * FROM juegos WHERE slug = ? LIMIT 1")
+      .bind(slug)
+      .first();
+
+    if (!result) return c.json({ error: "No encontrado" }, 404);
+
+    return c.json(result);
+  } catch (err) {
+    return c.json(
+      { error: "Error interno", detalle: (err as any).message },
       500
     );
   }
