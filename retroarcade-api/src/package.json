@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "express": "^5.1.0",
+    "i18next": "^25.6.3",
+    "i18next-express-middleware": "^2.0.0",
+    "i18next-fs-backend": "^2.6.1",
+    "i18next-http-middleware": "^3.8.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/i18next-express-middleware": "^1.7.0",
+    "@types/node": "^24.10.1"
+  }
+}

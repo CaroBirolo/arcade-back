@@ -59,17 +59,59 @@ export const JuegoBySlug = async (c: Context) => {
   try {
     const slug = c.req.param("slug");
 
-    const result = await c.env.DB.prepare(
-      "SELECT * FROM juegos WHERE slug = ? LIMIT 1"
-    )
-      .bind(slug)
+    const result = await c.env.DB.prepare(`
+      SELECT
+        j.id,
+        j.nombre,
+        j.plataforma,
+        j.imagen,
+        j.iframe,
+        j.url,
+        j.categoria_id,
+        j.slug
+      FROM juegos j
+      WHERE j.slug = ?
+      LIMIT 1
+    `).bind(slug)
       .first();
+    /*
+    const result = await c.env.DB.prepare(`
+      SELECT
+        j.id,
+        j.nombre,
+        d.anio,
+        j.plataforma,
+        j.imagen,
+        j.iframe,
+        j.url,
+        j.categoria_id,
+        j.slug,
+        d.genero,
+        d.desarrollador,
+        d.jugadores,
+        d.estilo,
+        d.gameplay,
+        d.objetivo,
+        d.descripcion_corta,
+        d.descripcion_larga
+      FROM juegos j
 
-    if (!result) return c.json({ error: "Juego no encontrado" }, 404);
+      LEFT JOIN juego_detalle d
+        ON j.slug = d.slug
+      WHERE j.slug = ?
+      LIMIT 1
+    `).bind(slug)
+      .first();*/
 
+    if (!result) {
+      return c.json({ error: "Juego no encontrado" }, 404);
+    }
     return c.json(result);
   } catch (err) {
-    return c.json({ error: "Error interno", detail: (err as any).message }, 500);
+    return c.json(
+      { error: "Error interno", detail: (err as any).message },
+      500
+    );
   }
 };
 

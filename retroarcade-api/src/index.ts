@@ -1,17 +1,13 @@
 import { fromHono } from "chanfana";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { 
-  JuegosByCategoria, BuscarJuegos,
-  JuegosRandom, JuegosByCategoriaSlugYLetra, JuegoBySlug, JuegosByCategoriaSlug 
+import { BuscarJuegos,
+  JuegosRandom, JuegoBySlug, JuegosByCategoriaSlug 
 } from "./endpoints/juegos";
-import { CategoriasList, CategoriaBySlug } from "./endpoints/categorias";
+import { CategoriasList } from "./endpoints/categorias";
 
 
-/* ===============================
-   CONFIG GENERAL
-================================ */
-
+/*CONFIG GENERAL*/
 const DEV_MODE = true; // 🔴 poner en false en producción
 
 const allowedOrigins = [
@@ -19,25 +15,16 @@ const allowedOrigins = [
   "https://www.retroverse.cc",
 ];
 
-/* ===============================
-   RATE LIMIT (simple)
-================================ */
-
+/*RATE LIMIT (simple)*/
 const RATE_LIMIT_MAX = 60;
 const RATE_LIMIT_WINDOW = 60_000;
 
 const ipRequests = new Map<string, { count: number; time: number }>();
 
-/* ===============================
-   APP
-================================ */
-
+/*APP*/
 const app = new Hono<{ Bindings: Env }>();
 
-/* ===============================
-   CORS
-================================ */
-
+/* CORS */
 app.use("*", async (c, next) => {
   // 🔓 DEV: permitir todo
   if (DEV_MODE) {
@@ -66,10 +53,7 @@ app.use("*", async (c, next) => {
   })(c, next);
 });
 
-/* ===============================
-   ANTI BOTS (solo PROD)
-================================ */
-
+/* ANTI BOTS (solo PROD)*/
 app.use("*", async (c, next) => {
   if (DEV_MODE) return next();
 
@@ -83,10 +67,7 @@ app.use("*", async (c, next) => {
   await next();
 });
 
-/* ===============================
-   RATE LIMIT (solo PROD)
-================================ */
-
+/*RATE LIMIT (solo PROD) */
 app.use("*", async (c, next) => {
   if (DEV_MODE) return next();
 
@@ -112,10 +93,7 @@ app.use("*", async (c, next) => {
   await next();
 });
 
-/* ===============================
-   ORIGIN CHECK EXTRA (solo PROD)
-================================ */
-
+/* RIGIN CHECK EXTRA (solo PROD) */
 app.use("*", async (c, next) => {
   if (DEV_MODE) return next();
 
@@ -131,10 +109,7 @@ app.use("*", async (c, next) => {
   await next();
 });
 
-/* ===============================
-   ENDPOINTS
-================================ */
-
+/*ENDPOINTS*/
 const openapi = fromHono(app, { docs_url: "/" });
 
 openapi.get("/api/categorias", CategoriasList);
